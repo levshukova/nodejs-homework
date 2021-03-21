@@ -2,14 +2,20 @@ const express = require('express');
 const router = express.Router();
 const validate = require('./validation');
 const contactsController = require('../../../controllers/contactsController');
+const guard = require('../../../helpers/guard');
 
 router
-  .get('/', contactsController.getAllContacts)
-  .post('/', validate.createContact, contactsController.createContact);
+  .get('/', guard, contactsController.getAllContacts)
+  .post('/', guard, validate.createContact, contactsController.createContact);
 
 router
-  .get('/:id', contactsController.getContactById)
-  .delete('/:id', contactsController.removeContact)
-  .patch('/:id', validate.updateContactField, contactsController.updateContact);
+  .get('/:id', guard, contactsController.getContactById)
+  .delete('/:id', guard, contactsController.removeContact)
+  .patch(
+    '/:id',
+    guard,
+    validate.updateContactField,
+    contactsController.updateContact,
+  );
 
 module.exports = router;

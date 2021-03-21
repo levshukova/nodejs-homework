@@ -1,0 +1,19 @@
+const express = require('express');
+const router = express.Router();
+
+const usersController = require('../../../controllers/usersController');
+const guard = require('../../../helpers/guard');
+const validate = require('./validation');
+
+router.post('/register', validate.validateAuth, usersController.create);
+router.post('/login', validate.validateAuth, usersController.login);
+router.post('/logout', guard, usersController.logout);
+router.get('/current', guard, usersController.current);
+router.patch(
+  '/',
+  guard,
+  validate.validateUpdateSub,
+  usersController.updateSubscription,
+);
+
+module.exports = router;

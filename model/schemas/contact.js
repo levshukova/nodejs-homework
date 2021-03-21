@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema, model, SchemaTypes } = mongoose;
+const { ContactType } = require('../../helpers/constants');
 
 const mongoosePaginate = require('mongoose-paginate-v2');
 
@@ -21,6 +22,14 @@ const contactSchema = new Schema(
       type: String,
       required: [true, 'Set a phone number for your contact'],
       unique: true,
+    },
+    category: {
+      type: String,
+      enum: {
+        values: [ContactType.FRIEND, ContactType.WORK, ContactType.OTHER],
+        message: "This category doesn't exist",
+      },
+      default: ContactType.OTHER,
     },
     owner: {
       type: SchemaTypes.ObjectId,

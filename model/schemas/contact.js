@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
-const { Schema, model } = mongoose;
+const { Schema, model, SchemaTypes } = mongoose;
+const { ContactType } = require('../../helpers/constants');
+
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const contactSchema = new Schema(
   {
@@ -20,22 +23,23 @@ const contactSchema = new Schema(
       required: [true, 'Set a phone number for your contact'],
       unique: true,
     },
-    subscription: {
+    category: {
       type: String,
-      default: 'free',
-      enum: ['free', 'pro', 'premium'],
+      enum: {
+        values: [ContactType.FRIEND, ContactType.WORK, ContactType.OTHER],
+        message: "This category doesn't exist",
+      },
+      default: ContactType.OTHER,
     },
-    password: {
-      type: String,
-      default: 'password',
-    },
-    token: {
-      type: String,
-      default: '',
+    owner: {
+      type: SchemaTypes.ObjectId,
+      ref: 'user',
     },
   },
   { versionKey: false, timestamps: true },
 );
+
+contactSchema.plugin(mongoosePaginate);
 
 const Contact = model('contact', contactSchema);
 

@@ -1,4 +1,9 @@
 const jwt = require('jsonwebtoken');
+const path = require('path');
+const fs = require('fs').promises;
+const Jimp = require('jimp');
+const createFolderIsExist = require('../helpers/create-dir');
+
 require('dotenv').config();
 
 const Users = require('../model/users');
@@ -28,6 +33,7 @@ async function create(req, res, next) {
         id: newUser.id,
         email: newUser.email,
         subscription: newUser.subscription,
+        avatar: newUser.avatar,
       },
     });
   } catch (e) {
@@ -39,7 +45,7 @@ async function login(req, res, next) {
   try {
     const { email, password } = req.body;
     const user = await Users.findByEmail(email);
-    const isPasswordValid = await user.validPassword(password);
+    const isPasswordValid = await user?.validPassword(password);
 
     if (!user || !isPasswordValid) {
       return res.status(HttpCode.UNAUTHORIZED).json({
@@ -112,10 +118,50 @@ async function updateSubscription(req, res, next) {
   }
 }
 
+async function addAvatarToStatic(req) {
+  const id = String(req.user._id);
+  const AVATARS_OF_USERS = process.env.AVATARS_OF_USERS;
+  const pathFile = req.file.path;
+  const newNameAvatar = `${Date.now()}-${req.file.originalname}`;
+  const img = await Jimp.read(pathFile);
+  await img
+    .autocrop()
+    .cover(250, 250, Jimp.HORIZONTAL_ALIGN_CENTER | Jimp.VERTICAL_ALIGN_MIDDLE)
+    .writeAsync(pathFile);
+  await createFolderIsExist(path.join(AVATARS_OF_USERS, id));
+  await fs.rename(pathFile, path.join(AVATARS_OF_USERS, id, newNameAvatar));
+  const avatarUrl = path.join(id, newNameAvatar);
+  try {
+    await fs.unlink(
+      path.join(process.cwd(), AVATARS_OF_USERS, req.user.avatarURL),
+    );
+  } catch (e) {
+    console.log(e.message);
+  }
+  return avatarUrl;
+}
+
+const updateAvatar = async (req, res, next) => {
+  try {
+    const id = String(req.user._id);
+    const avatarUrl = await addAvatarToStatic(req);
+    await Users.updateAvatarUrl(id, avatarUrl);
+    return res.json({
+      status: Status.SUCCESS,
+      code: HttpCode.OK,
+      data: {
+        avatarUrl,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+};
 module.exports = {
   create,
   login,
   logout,
   current,
   updateSubscription,
+  updateAvatar,
 };

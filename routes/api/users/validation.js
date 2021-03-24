@@ -40,3 +40,15 @@ module.exports.validateAuth = (req, _res, next) => {
 module.exports.validateUpdateSub = (req, _res, next) => {
   return validate(schemaValidateUpdateSub, req.body, next);
 };
+
+module.exports.updateAvatar = (req, res, next) => {
+  if (!req.file) {
+    return res.status(HttpCode.BAD_REQUEST).json({
+      status: Status.ERROR,
+      code: HttpCode.BAD_REQUEST,
+      data: 'Bad request',
+      message: 'File not found',
+    });
+  }
+  next();
+};

@@ -17,6 +17,10 @@ router.patch(
   validate.validateUpdateSub,
   usersController.updateSubscription,
 );
-router.patch('/avatar', [(guard, upload.single('avatar'))]);
+router.patch(
+  '/avatar',
+  [guard, upload.single('avatar'), validate.updateAvatar],
+  usersController.updateAvatar,
+);
 
 module.exports = router;
